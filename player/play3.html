@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+
+  <title>CrowdSurf</title>
+</head>
+
+<body>
+  <div class="ivsHolder" style="position:absolute; top:0; width:100%; height:100%;">
+    <video id="ivsPlayer" playsInline style="width:100%; height:65%; object-fit: cover;"></video>
+  </div>
+  <div id="audios"></div>
+  <div id="videos"></div>
+
+  <!-- <div style="position:absolute; top:25%; right:50%; z-index:10; font-size:40px; color:white; background-color:black; padding:10px;" id="frameRate">
+      FR
+    </div> -->
+  <!-- <script src="https://player.live-video.net/1.11.0/amazon-ivs-player.min.js"></script> -->
+
+  <script type="module" lang="javascript">
+  </script>
+</body>
+<style>
+  body,
+  html {
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: arial;
+    color: white;
+    background-color: transparent;
+    font-size: 10pt;
+  }
+
+  #renderCanvas {
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    outline: none;
+  }
+
+  /* Enlarge font for phones in portrait*/
+  @media only screen and (max-device-width: 926px) and (orientation: portrait) {
+    body {
+      font-size: 14pt;
+    }
+  }
+</style>
+<!-- <script>
+
+  if (IVSPlayer.isPlayerSupported) {
+    console.log('play me')
+    const player = IVSPlayer.create();
+    player.attachHTMLVideoElement(document.getElementById("ivsPlayer"));
+    player.setAutoplay(true);
+    player.setMuted(false);
+    player.setVolume(0.2);
+    // demo ivs stream 
+    player.load('https://fcc3ddae59ed.us-west-2.playback.live-video.net/api/video/v1/us-west-2.893648527354.channel.DmumNckWFTqz.m3u8');
+    // kylie
+    // player.load('https://62b0e484537e.eu-west-1.playback.live-video.net/api/video/v1/eu-west-1.743551506018.channel.eyBFCGdNC6ZL.m3u8');
+    player.play();
+  }
+</script> -->
+
+<script type="module" lang="javascript">
+  import { WebRTCAdaptor } from "./webrtc_adaptor.js";
+  let played = false;
+  let roomTimerId = 0;
+  let currentStreams = [];
+  // const playVideo = (track) => {
+  //   if (track.kind !== 'video') {
+  //     return;
+  //   }
+
+  //   const index = track.id.slice(track.id.lastIndexOf('-') + 1);
+
+  //   const video = document.getElementById("video" + index);
+
+  //   if (video.srcObject == null) {
+  //     video.srcObject = new MediaStream();
+  //   }
+
+  //   video
+  //     .srcObject
+  //     .addTrack(track)
+
+  //   /*obj.track.onended = event => {
+  //     video
+  //       .srcObject
+  //       .removeTrack(event.currentTarget);
+  //     if (video.srcObject.getTracks().length == 0) {
+  //       removeRemoteVideo(index);
+  //     }
+  //   };*/
+  // }
+    alert('test');
+  let websocketURL =
+    "wss://gpu-dev-00.wearecrowdsurf.com:5443/WebRTCAppEE/websocket?rtmpForward=true";
+
+  // let mediaConstraints = {
+  //   video: {
+  //       width: {ideal: 192},
+  //       height: {ideal: 144},
+  //       facingMode: 'user',
+  //       frameRate: {max: 15},
+  //     },
+  //     audio: true,
+  // };
+
+   let mediaConstraints = {
+    video: {
+        width: {ideal: 192},
+        height: {ideal: 144},
+        facingMode: 'user',
+        frameRate: {max: 15},
+      },
+      audio: true,
+  };
+
+  var streamId = '0778c86e-2ddf-47f3-b2db-bac1a9143b87-0';
+  var userId = '92752665-9a88-4558-a7f1-19f4e2950ae7';
+
+
+
+  let pc_config = {
+    iceServers: [
+      {
+        urls: "stun:stun1.l.google.com:19302",
+      },
+    ],
+  };
+
+  let sdpConstraints = {
+    OfferToReceiveAudio: false,
+    offerToReceiveVideo: false,
+  };
+
+  let tracks = [];
+
+  var webRTCAdaptor = new WebRTCAdaptor({
+    websocket_url: websocketURL,
+    mediaConstraints: mediaConstraints,
+    peerconnection_config: pc_config,
+    sdp_constraints: sdpConstraints,
+    // remoteVideoId: "myRemoteVideo",
+    isPlayMode: false,
+    debug : true,
+		dataChannelEnabled : true,
+    callback: (info, obj) => {
+      console.log(info, obj);
+      // console.log( info + " notification received");
+      if (info === "initialized") {
+
+        webRTCAdaptor.publish('testtom', '');
+
+//        webRTCAdaptor.play(streamId, "", "", [], "", "");
+        // webRTCAdaptor.enableStats(streamId);
+        // console.log(webRTCAdaptor.getTracks(streamId));
+  //      webRTCAdaptor.joinRoom('testroom', userId);
+
+
+
+      }
+      if (info == "joinedTheRoom") {
+        console.log('joinedTheRoom');
+        console.log(obj);
+
+
+        // if (obj.streams != null) {
+        // 	obj.streams.forEach(function (item) {
+        // 		console.log("Stream joined with ID: " + item);
+        // 		webRTCAdaptor.play(item, "",
+        // 			'testroom');
+        // 	});
+        // 	streamsList = obj.streams;
+        // }
+        // roomTimerId = setInterval(() => {
+        //   webRTCAdaptor.getRoomInfo('testroom', userId);
+        // }, 5000);
+      }
+      // set played to be true once connected the first time
+      // and if it's the the second time, redraw the textures
+      if (info === "play_started") {
+        // if (!played) {
+        //   played = true;
+        // } else {
+        //   parent.webRTCReconnect(streamId);
+        // }
+
+        // call function drawTexture
+        // on index.js when we have a playing video
+        // used when we're doing webrtc switching
+        // if (parent.drawTexture) {
+        //   parent.drawTexture(1);
+        // }
+      }
+
+      // set played to be true once connected the first time
+      // if (obj?.state === 'connected' && !played) {
+      //   played = true;
+      //   console.log('connected');
+      // }
+
+      //  // trigger redraw of material if second time
+      //  if (obj?.state === 'connected' && played) {
+      //   console.log('reconnected');
+      //   parent.webRTCReconnect(streamId);
+      // }
+
+      if (info === "play_finished") {
+        // try reconnecting after 3 seconds
+        // const str =  obj.streamId;
+        // if (currentStreams.includes(str)) {
+        //   console.log('REMOVING', str);
+        //   currentStreams = currentStreams.filter(s => s === str);
+        //   // remove from DOM
+        //   const element = document.getElementById(str);
+        //   element.remove();
+
+        // }
+      }
+      if (info === 'trackList') {
+        console.log(obj);
+        // if (tracks !== obj.trackList) {
+        //   tracks = obj.trackList;
+        //   let j = 0;
+        //   while (j < tracks.length) {
+        //     // webRTCAdaptor.enableTrack(streamId, tracks[j], true);
+        //     j++;
+        //   }
+        // }
+      }
+
+
+      // if (info == "newStreamAvailable") {
+
+      //   // play audio if it's not main stream id
+      //   if (obj.track.kind === 'audio' && obj.streamId !== streamId) {
+      //     // remove video track if it's not the main stream
+      //     playAudio(obj);
+
+      //   }
+
+
+      //   // play video if it's main stream id
+      //   if (obj.track.kind === 'video' && obj.streamId === streamId) {
+      //     // disable audio sending so we're not wasting cpu and bandwidth
+      //     playVideo(obj);
+      //   }
+
+      //   // remove audio if it's main stream id
+      //   if (obj.track.kind === 'audio' && obj.streamId === streamId) {
+      //     // remove video track if it's not the main stream
+      //     webRTCAdaptor.toggleAudio(obj.streamId.replace('ARDAMSv', ''), obj.trackId.replace('ARDAMSv', ''), false);
+
+
+      //   }
+
+      //   // remove video if it's an unwanted video track
+      //   if (obj.track.kind === 'video' && obj.streamId !== streamId) {
+      //     // disable video sending so we're not wasting cpu and bandwidth
+      //     webRTCAdaptor.toggleVideo(obj.streamId.replace('ARDAMSv', ''), obj.trackId.replace('ARDAMSv', ''), false);
+      //   }
+      // }
+      // if (info == "roomInformation") {
+      //   console.log(info, obj);
+      //   //Checks if any new stream has added, if yes, plays.
+      //   for (let str of obj.streams) {
+      //     if (!currentStreams.includes(str)) {
+      //       webRTCAdaptor.play(str);
+      //       currentStreams.push(str);
+      //     }
+      //   }
+        // // Checks if any stream has been removed, if yes, removes the view and stops webrtc connection.
+        // for (let str of streamsList) {
+        // 	if (!obj.streams.includes(str)) {
+        // 		removeRemoteVideo(str);
+        // 	}
+        // }
+        //Lastly updates the current streamlist with the fetched one.
+
+
+
+
+
+
+        // webRTCAdaptor.play(streamId, "", "", [], "", "");
+
+        //Check video tracks active/inactive status
+        // checkVideoTrackStatus(streamsList);
+      // }
+    },
+    callbackError: function (error, message) {
+      alert("error callback: " + JSON.stringify(error));
+    },
+  });
+
+
+  function playAudio(obj) {
+    console.log('playing audio')
+    console.log(obj);
+    const audio = document.createElement('audio');
+    audio.srcObject = obj.stream;
+    audio.id = obj.streamId;
+    audio.autoplay = true;
+    audio.controls = true;
+    const holder = document.getElementById("audios");
+    holder.append(audio);
+  }
+
+  function playVideo(obj) {
+    console.log('playing video')
+    console.log(obj);
+    const video = document.createElement('video');
+    video.srcObject = obj.stream;
+    video.autoplay = true;
+    video.id = 'myRemoteVideo';
+    video.playsInline = true;
+    video.muted = true;
+    const holder = document.getElementById("videos");
+    holder.append(video);
+  }
+
+
+
+
+</script>
+
+</html>

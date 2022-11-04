@@ -1,0 +1,158 @@
+<html>
+
+<body>
+  <audio id="remoteAudio" controls autoplay></audio>
+</body>
+
+<script type="module" lang="javascript">
+  import { WebRTCAdaptor } from "./webrtc_adaptor.js";
+  let played = false;
+  // const playVideo = (track) => {
+  //   if (track.kind !== 'video') {
+  //     return;
+  //   }
+
+  //   const index = track.id.slice(track.id.lastIndexOf('-') + 1);
+
+  //   const video = document.getElementById("video" + index);
+
+  //   if (video.srcObject == null) {
+  //     video.srcObject = new MediaStream();
+  //   }
+
+  //   video
+  //     .srcObject
+  //     .addTrack(track)
+
+  //   /*obj.track.onended = event => {
+  //     video
+  //       .srcObject
+  //       .removeTrack(event.currentTarget);
+  //     if (video.srcObject.getTracks().length == 0) {
+  //       removeRemoteVideo(index);
+  //     }
+  //   };*/
+  // }
+
+  let websocketURL =
+    "wss://gpu-dev-00.wearecrowdsurf.com:5443/WebRTCAppEE/websocket";
+
+  let mediaConstraints = {
+    video: false,
+    audio: false,
+  };
+
+  var url_string = window.location.href.toLowerCase();
+  var url = new URL(url_string);
+  var streamId = url.searchParams.get("name");
+  var num = url.searchParams.get("num");
+
+  streamId = streamId.replace("users", "Users");
+
+  let pc_config = {
+    iceServers: [
+      {
+        urls: "stun:stun1.l.google.com:19302",
+      },
+    ],
+  };
+
+  let sdpConstraints = {
+    OfferToReceiveAudio: false,
+    offerToReceiveVideo: true,
+  };
+
+  let tracks = [];
+
+  var webRTCAdaptor = new WebRTCAdaptor({
+    websocket_url: websocketURL,
+    mediaConstraints: mediaConstraints,
+    peerconnection_config: pc_config,
+    sdp_constraints: sdpConstraints,
+    isPlayMode: true,
+    debug: false,
+    callback: (info, obj) => {
+      console.log(info, obj);
+      // console.log( info + " notification received");
+      if (info === "initialized") {
+        webRTCAdaptor.play(streamId, "", "", [], "", "");
+       
+        // webRTCAdaptor.enableStats(streamId);
+        // console.log(webRTCAdaptor.getTracks(streamId));
+
+
+
+      }
+      // set played to be true once connected the first time
+      // and if it's the the second time, redraw the textures
+      if (info === "play_started") {
+        // if (!played) {
+        //   played = true;
+        // } else {
+        //   parent.webRTCReconnect(streamId);
+        // }
+
+        // call function drawTexture
+        // on index.js when we have a playing video
+        // used when we're doing webrtc switching
+     
+      }
+
+      // set played to be true once connected the first time
+      // if (obj?.state === 'connected' && !played) {
+      //   played = true;
+      //   console.log('connected');
+      // }
+
+      //  // trigger redraw of material if second time
+      //  if (obj?.state === 'connected' && played) {
+      //   console.log('reconnected');
+      //   parent.webRTCReconnect(streamId);
+      // }
+
+      if (info === "play_finished") {
+        // try reconnecting after 3 seconds
+        setTimeout(() => {
+          webRTCAdaptor.play(streamId, "", "", [], "", "");
+        }, 500);
+      }
+      if (info === 'trackList') {
+        console.log(obj);
+        // if (tracks !== obj.trackList) {
+        //   tracks = obj.trackList;
+        //   let j = 0;
+        //   while (j < tracks.length) {
+        //     // webRTCAdaptor.enableTrack(streamId, tracks[j], true);
+        //     j++;
+        //   }
+        // }
+      }
+
+      if (info === "newStreamAvailable") {
+
+        if (obj.track.kind === 'audio') {
+          playAudio(obj.stream);
+        }
+      }
+    },
+    callbackError: function (error, message) {
+      alert("error callback: " + JSON.stringify(error));
+    },
+  });
+
+
+  function playAudio(obj) {
+    console.log('plauing audio')
+    console.log(obj);
+    var audio = document.getElementById("remoteAudio");
+    audio.srcObject = obj;
+   
+  }
+
+
+  
+
+
+</script>
+
+</html>

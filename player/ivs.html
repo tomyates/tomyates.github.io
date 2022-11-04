@@ -1,0 +1,23 @@
+<html>
+  <script src="https://player.live-video.net/1.11.0/amazon-ivs-player.min.js"></script>
+
+  <body>
+    <video
+      style="width: 250px;"
+      id="ivsVideo"
+      muted
+      playsinline="playsinline"
+    >
+    </video>
+  </body>
+
+  <script>
+    if (IVSPlayer.isPlayerSupported) {
+      const player = IVSPlayer.create();
+      player.attachHTMLVideoElement(document.getElementById("ivsVideo"));
+      player.setAutoplay(true);
+      player.load('https://fcc3ddae59ed.us-west-2.playback.live-video.net/api/video/v1/us-west-2.893648527354.channel.DmumNckWFTqz.m3u8');
+      player.play();
+    }
+  </script>
+</html>
